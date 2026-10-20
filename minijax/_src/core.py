@@ -1,41 +1,75 @@
-import numpy as np
+from minijax._src.array import ArrayImpl
 
 
-class ShapedArray:
-    __slots__ = ["dtype", "shape", "weak_type"]
-
-    def __init__(self, dtype, shape, weak_type=False):
-        self.dtype = dtype
-        self.shape = shape
-        self.weak_type = weak_type
+def _unwrap(x):
+    """ArrayImpl -> its underlying ndarray; anything else passes through."""
+    return x._data if isinstance(x, ArrayImpl) else x
 
 
-impl_rules = {
-    "add": lambda x, y: np.add(x, y),
-    "mul": lambda x, y: np.multiply(x, y),
-    "neg": lambda x: np.negative(x),
-    "sin": lambda x: np.sin(x),
-    "cos": lambda x: np.cos(x),
-}
+# -------------------- Tracing --------------------
+
+
+class Tracer:
+    """A value during tracing: a concrete value plus the trace it belongs to."""
+
+    __slots__ = ["trace", "val"]
+
+    def __init__(self, trace, val):
+        self.trace = trace
+        self.val = val
+
+
+class Trace:
+    """Base class. A trace decides what `bind` does with a primitive."""
+
+    def process_primitive(self, primitive, tracers, params):
+        raise NotImplementedError
+
+
+class EvalTrace(Trace):
+    """The bottom trace: run `impl` and hand the result back (pass-through)."""
+
+    def process_primitive(self, primitive, tracers, params):
+        return Tracer(self, primitive.impl(*[t.val for t in tracers], **params))
+
+
+# -------------------- dynamic scope --------------------
+# currently I don't think we need "__array_priority__"
+_trace_stack = [EvalTrace()]
+
+
+class new_main:
+    """Enter/exit a trace: push on enter, pop on exit (dynamic scope)."""
+
+    def __init__(self, trace):
+        self.trace = trace
+
+    def __enter__(self):
+        _trace_stack.append(self.trace)
+        return self.trace
+
+    def __exit__(self, *exc):
+        _trace_stack.pop()
+
+
+# -------------------- Primitive --------------------
 
 
 class Primitive:
-    __slots__ = ["impl_rule", "name"]
+    """
+    Operators like add, neg, mul or customized ones.
+    For more information, refer to: https://docs.jax.dev/en/latest/601/jax-primitives.html
+    """
 
-    def __init__(self, name: str):
+    __slots__ = ["impl", "name"]
+
+    def __init__(self, name, impl):
         self.name = name
-        self.impl_rule = impl_rules[name]
+        self.impl = impl
 
     def bind(self, *args, **params):
-        # https://github.com/jax-ml/jax/blob/main/jax/_src/core.py#L631
-        from minijax._src.array import ArrayImpl
-
-        unwrapped = [a._data if isinstance(a, ArrayImpl) else a for a in args]
-        return ArrayImpl(self.impl_rule(*unwrapped, **params))
-
-    def abstract_eval():
-        pass
-
-
-class Jaxpr:
-    pass
+        trace = _trace_stack[-1]
+        tracers = [
+            a if isinstance(a, Tracer) else Tracer(trace, _unwrap(a)) for a in args
+        ]
+        return ArrayImpl(trace.process_primitive(self, tracers, params).val)

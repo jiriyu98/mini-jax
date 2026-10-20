@@ -118,8 +118,9 @@ uv run python examples/mN_*.py    # demo runs
 - Append 3 lines to §Notes: *what real JAX does / what we simplified / what we skipped*.
 - Tag `mN-xxx`, version `0.N`. The tag chain is your learning log.
 
-Toolchain: `uv` · `ruff` · `pytest` · `import-linter`. `pyproject.toml`: runtime dep `numpy` only, `jax`
-behind a `[diff]` extra.
+Tests use `absl.testing` (`absltest` + `parameterized`), run with pytest (or a single file directly:
+`uv run python tests/lax_numpy/lax_numpy_test.py`). Toolchain: `uv` · `ruff` · `import-linter`.
+`pyproject.toml`: runtime dep `numpy` only, `jax` behind a `[diff]` extra.
 
 ## Notes
 

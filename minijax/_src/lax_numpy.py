@@ -1,11 +1,13 @@
+import numpy as np
+
 from minijax._src.array import ArrayImpl
 from minijax._src.core import Primitive
 
-add_p = Primitive("add")
-mul_p = Primitive("mul")
-neg_p = Primitive("neg")
-sin_p = Primitive("sin")
-cos_p = Primitive("cos")
+add_p = Primitive("add", np.add)
+mul_p = Primitive("mul", np.multiply)
+neg_p = Primitive("neg", np.negative)
+sin_p = Primitive("sin", np.sin)
+cos_p = Primitive("cos", np.cos)
 
 
 def add(x, y):
