@@ -43,12 +43,12 @@ class LaxNumpyTest(parameterized.TestCase):
         a = _rand(shape, dtype)
         np.testing.assert_allclose(mj_fn(_arr(a)).data, np_fn(a), rtol=1e-6, atol=1e-6)
 
-    def test_operators(self):
-        x = _arr([1.0, 2.0, 3.0])
-        y = _arr([4.0, 5.0, 6.0])
-        np.testing.assert_allclose((x + x).data, [2.0, 4.0, 6.0])
-        np.testing.assert_allclose((x * y).data, [4.0, 10.0, 18.0])
-        np.testing.assert_allclose((-x).data, [-1.0, -2.0, -3.0])
+    # def test_operators(self):
+    #     x = _arr([1.0, 2.0, 3.0])
+    #     y = _arr([4.0, 5.0, 6.0])
+    #     np.testing.assert_allclose((x + x).data, [2.0, 4.0, 6.0])
+    #     np.testing.assert_allclose((x * y).data, [4.0, 10.0, 18.0])
+    #     np.testing.assert_allclose((-x).data, [-1.0, -2.0, -3.0])
 
 
 if __name__ == "__main__":

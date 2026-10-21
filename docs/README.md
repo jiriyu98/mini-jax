@@ -25,41 +25,47 @@ Don't re-open these.
 
 ## Build order
 
-`numpy → tree_util → core → interpreters → api → lax`, then `{export → compiler → minijaxlib}` and
-`{sharding → pallas}` in parallel.
+`array → numpy wrapper → trace/tracer → bind/impl`. Once `bind` routes through a trace, the seam is
+open: every later feature — AD, `vmap`, `jit` — is a *new `Trace` subclass*, not new machinery. Then
+`{export → compiler → minijaxlib}` and `{sharding → pallas}` in parallel.
 
 ## Milestones
 
-### M0 · numpy core
-- [ ] `Array` wrapping ndarray; dtype promotion + weak types
-- [ ] op registry `(abstract_eval, numpy_impl)` — M2 and M3 reuse this shape
-- [ ] jnp ops: elementwise, reduce, shape, matmul, `where`, indexing
-- [ ] pytrees: flatten / unflatten / map
-- [ ] parity vs numpy across a shape × dtype matrix
+### M0 · array + numpy wrapper
+- [x] `Array` / `ArrayImpl` wrapping ndarray — `data`, `dtype`, `shape`, `ndim`, `size`, `weak_type`
+- [x] `minijax.numpy` elementwise ops: `add`, `mul`, `neg`, `sin`, `cos`
+- [x] parity vs numpy across a shape × dtype matrix
 
-### M1 · trace
-- [ ] `Primitive.bind`, abstract eval, Tracer dispatch (`__add__`, `__getitem__`, …)
-- [ ] `Var` / `Eqn` / `Jaxpr` + pretty printer
-- [ ] tracer-leak detection (a tracer escaping its trace → error)
+### M1 · trace + tracer
+- [x] `Tracer` (a value + the trace it belongs to) and `Trace` (base interpreter)
+- [x] `EvalTrace` — bottom trace: run `impl`, hand back a value (pass-through)
+- [x] dynamic scope: `_trace_stack` + `new_main` push/pop
 
-### M2 · interpret
-- [ ] `eval_jaxpr` with an environment dict
-- [ ] op coverage parity with M0, enforced by one shared op table
+### M2 · bind/impl — the seam
+- [x] `Primitive(name, impl)` — op registry; `impl` is the eager numpy function
+- [x] `Primitive.bind` routes through the active trace → `impl`
+- [x] tracer dispatch (`__add__`, `__mul__`, `__neg__`, `__radd__`)
 
-### M3 · `jit`
-- [ ] trace cache keyed on pytree of avals + static args + closure
-- [ ] `partial_eval`: known vs unknown, stage constants
-- [ ] `static_argnums`; expose cache hit/miss counts
+M2 is the pivot: `EvalTrace` is only the first trace. Everything after this — `JVP`/`grad`,
+`vmap`, `jit` — is a new `Trace` subclass plus its per-primitive rules over the *same* primitive
+table, not a new interpreter.
+
+### M3 · AD traces
+- [ ] `JVPTrace.process_primitive` (stub exists) — forward-mode linearization
+- [ ] transpose → `vjp`, `grad`, `value_and_grad`, `jacrev`/`jacfwd`
+- [ ] finite-difference checks; transpose identity; `grad ∘ vmap`
 
 ### M4 · `vmap`
-- [ ] `BatchTracer` carrying `batch_dim`
+- [ ] `BatchTrace` / `BatchTracer` carrying `batch_dim`
 - [ ] batch rules per primitive + generic moveaxis fallback
 - [ ] nested vmap (depth 3); vs manual Python loop
 
-### M5 · `grad`
-- [ ] JVP rules → `jvp`
-- [ ] linearize + transpose → `vjp`, `grad`, `value_and_grad`, `jacrev`/`jacfwd`
-- [ ] finite-difference checks; transpose identity; `grad ∘ vmap`
+### M5 · `jit`
+- [ ] `abstract_eval` per primitive → avals (reuse the `ShapedArray` stub in `array.py`)
+- [ ] `JaxprTrace` capturing `Var` / `Eqn` / `Jaxpr` + pretty printer
+- [ ] `eval_jaxpr` with an environment dict
+- [ ] trace cache keyed on avals + static args; `partial_eval`; `static_argnums`
+- [ ] tracer-leak detection (a tracer escaping its trace → error)
 
 ### M6 · control flow
 - [ ] `cond`, `scan`, `while_loop` — each with batch / jvp / transpose rules

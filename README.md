@@ -24,10 +24,14 @@ jnp.add(x, y)  # -> ArrayImpl([5. 7. 9.])
 jnp.sin(x)     # -> [0.841... 0.909... 0.141...]
 ```
 
-# component
+# layers (build order)
 
-- [Primitive](https://docs.jax.dev/en/latest/601/jax-primitives.html): basica computational unit in jaxx
-- [Trace](https://docs.jax.dev/en/latest/autodidax2_part1.html#main-idea-context-sensitive-interpretation): interpreter, while trace is a jax jargon
+1. **array + numpy wrapper** — `ArrayImpl` wraps an ndarray; `minijax.numpy` exposes `add`, `mul`,
+   `neg`, `sin`, `cos`.
+2. **trace + tracer** — a [`Trace`](https://docs.jax.dev/en/latest/autodidax2_part1.html#main-idea-context-sensitive-interpretation)
+   is an interpreter; a `Tracer` is a value plus the trace it belongs to.
+3. **bind/impl** — a [`Primitive`](https://docs.jax.dev/en/latest/601/jax-primitives.html) (name + numpy
+   `impl`); `bind` routes through the active trace.
 
 # reference
 - [Autodidax1](https://docs.jax.dev/en/latest/autodidax.html), [Autodidax2](https://docs.jax.dev/en/latest/autodidax2_part1.html)

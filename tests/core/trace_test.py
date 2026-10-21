@@ -1,7 +1,7 @@
 import numpy as np
 from absl.testing import absltest
 
-from minijax import ArrayImpl, EvalTrace, Tracer, new_main
+from minijax import ArrayImpl, EvalTrace, new_main
 from minijax._src.lax_numpy import add_p
 from minijax.numpy import add, mul
 
@@ -21,10 +21,10 @@ class TraceTest(absltest.TestCase):
         trace = EvalTrace()
         out = trace.process_primitive(
             add_p,
-            [Tracer(trace, np.array([1.0])), Tracer(trace, np.array([2.0]))],
+            [np.array([1.0]), np.array([2.0])],
             {},
         )
-        np.testing.assert_allclose(out.val, [3.0])
+        np.testing.assert_allclose(out.data, [3.0])
 
     def test_bind_routes_through_active_trace(self):
         class CountingTrace(EvalTrace):
