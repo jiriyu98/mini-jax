@@ -1,7 +1,8 @@
 import numpy as np
 from absl.testing import absltest, parameterized
 
-from minijax import ArrayImpl, add, cos, mul, neg, sin
+from minijax import ArrayImpl
+from minijax.numpy import add, cos, mul, neg, sin
 
 
 def _arr(a):

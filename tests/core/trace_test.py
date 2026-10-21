@@ -1,8 +1,9 @@
 import numpy as np
 from absl.testing import absltest
 
-from minijax import ArrayImpl, EvalTrace, Tracer, add, mul, new_main
+from minijax import ArrayImpl, EvalTrace, Tracer, new_main
 from minijax._src.lax_numpy import add_p
+from minijax.numpy import add, mul
 
 
 def _arr(a):
