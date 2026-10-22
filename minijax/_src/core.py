@@ -44,9 +44,19 @@ class Trace:
     __slots__ = ["impl_rules"]
 
     def pure(self, val):
+        """
+        transform a concrete value to a tracer
+        """
         raise NotImplementedError
 
     def lift(self, val):
+        """
+        lift a tracer in outer trace to inner trace
+
+        e.g.             bottom   top
+            trace stack:[trace1, trace2]
+            Transform a tracer type in trace1 to trace2 is what jax calls "lift".
+        """
         raise NotImplementedError
 
     def process_primitive(self, primitive, tracers, params):
@@ -78,12 +88,10 @@ class JVPTrace(Trace):
     """
 
     def pure(self, val):
-        return JVPTracer(self, val, 0)  # TODO: zero like - number or array
+        return JVPTracer(self, val, 0.0)
 
     def lift(self, val):
-        return JVPTracer(
-            self, val.primal, val.tangent
-        )  # TODO: zero like - number or array
+        return JVPTracer(self, val.primal, 0.0)
 
     def process_primitive(self, primitive, tracers, params):
         primals = [tracer.primal for tracer in tracers]
@@ -99,8 +107,11 @@ def full_lower(val):
 
 
 def full_raise(val, trace: Trace):
+    """
+    handle all trace transformation
+    """
     if isinstance(val, Tracer):
-        if type(val._trace) is type(trace):
+        if val._trace is trace:
             return val
         return trace.lift(val)
     return trace.pure(val)

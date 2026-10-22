@@ -19,27 +19,27 @@ EvalTrace.impl_rules = {
 
 def add_jvp(primals, tangents):
     (x, y), (x_dot, y_dot) = primals, tangents
-    return x + y, x_dot + y_dot
+    return add(x, y), add(x_dot, y_dot)
 
 
 def mul_jvp(primals, tangents):
     (x, y), (x_dot, y_dot) = primals, tangents
-    return x * y, y * x_dot + x * y_dot
+    return mul(x, y), add(mul(y, x_dot), mul(x, y_dot))
 
 
 def sin_jvp(primals, tangents):
     (x,), (x_dot,) = primals, tangents
-    return np.sin(x), np.cos(x) * x_dot
+    return sin(x), mul(cos(x), x_dot)
 
 
 def cos_jvp(primals, tangents):
     (x,), (x_dot,) = primals, tangents
-    return np.cos(x), -np.sin(x) * x_dot
+    return cos(x), mul(neg(sin(x)), x_dot)
 
 
 def neg_jvp(primals, tangents):
     (x,), (x_dot,) = primals, tangents
-    return -x, -x_dot
+    return neg(x), neg(x_dot)
 
 
 JVPTrace.impl_rules = {
