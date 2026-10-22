@@ -1,11 +1,3 @@
-from minijax._src.array import ArrayImpl
-
-
-def _unwrap(x):
-    """ArrayImpl -> its underlying ndarray; anything else passes through."""
-    return x._data if isinstance(x, ArrayImpl) else x
-
-
 # -------------------- Tracing --------------------
 
 # Let's think about why we need to "raise" "lower" "find top trace":
@@ -77,7 +69,7 @@ class EvalTrace(Trace):
         return val
 
     def process_primitive(self, primitive, tracers, params):
-        return self.impl_rules[primitive](*[_unwrap(t) for t in tracers], **params)
+        return self.impl_rules[primitive](*tracers, **params)
 
 
 class JVPTrace(Trace):

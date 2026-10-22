@@ -25,15 +25,14 @@ Don't re-open these.
 
 ## Build order
 
-`array → numpy wrapper → trace/tracer → bind/impl`. Once `bind` routes through a trace, the seam is
+`numpy wrapper → trace/tracer → bind/impl`. Once `bind` routes through a trace, the seam is
 open: every later feature — AD, `vmap`, `jit` — is a *new `Trace` subclass*, not new machinery. Then
 `{export → compiler → minijaxlib}` and `{sharding → pallas}` in parallel.
 
 ## Milestones
 
-### M0 · array + numpy wrapper
-- [x] `Array` / `ArrayImpl` wrapping ndarray — `data`, `dtype`, `shape`, `ndim`, `size`, `weak_type`
-- [x] `minijax.numpy` elementwise ops: `add`, `mul`, `neg`, `sin`, `cos`
+### M0 · numpy wrapper
+- [x] `minijax.numpy` elementwise ops over plain scalars/ndarrays: `add`, `mul`, `neg`, `sin`, `cos`
 - [x] parity vs numpy across a shape × dtype matrix
 
 ### M1 · trace + tracer

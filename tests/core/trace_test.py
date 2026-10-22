@@ -1,13 +1,9 @@
 import numpy as np
 from absl.testing import absltest
 
-from minijax import ArrayImpl, EvalTrace, new_main
+from minijax import EvalTrace, new_main
 from minijax._src.lax_numpy import add_p
 from minijax.numpy import add, mul
-
-
-def _arr(a):
-    return ArrayImpl(np.asarray(a))
 
 
 def f(x, y):
@@ -24,7 +20,7 @@ class TraceTest(absltest.TestCase):
             [np.array([1.0]), np.array([2.0])],
             {},
         )
-        np.testing.assert_allclose(out.data, [3.0])
+        np.testing.assert_allclose(out, [3.0])
 
     def test_bind_routes_through_active_trace(self):
         class CountingTrace(EvalTrace):
@@ -37,17 +33,17 @@ class TraceTest(absltest.TestCase):
 
         trace = CountingTrace()
         with new_main(trace):
-            out = add(_arr([1.0]), _arr([2.0]))
+            out = add(np.array([1.0]), np.array([2.0]))
         self.assertEqual(trace.calls, 1)
-        np.testing.assert_allclose(out.data, [3.0])
+        np.testing.assert_allclose(out, [3.0])
 
     def test_trace_equals_eager(self):
         x = np.array([1.0, 2.0, 3.0])
         y = np.array([4.0, 5.0, 6.0])
         with new_main(EvalTrace()):
-            traced = f(_arr(x), _arr(y))
+            traced = f(x, y)
         expected = np.add(np.multiply(x, y), x)
-        np.testing.assert_allclose(traced.data, expected)
+        np.testing.assert_allclose(traced, expected)
 
 
 if __name__ == "__main__":
