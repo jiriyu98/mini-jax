@@ -24,12 +24,13 @@ class JVPTest(absltest.TestCase):
         def f(x):
 
             def g(y):
-                return x
+                return mul(x, y)
 
-            should_zero = derivative(g, 3.0)
-            return add(mul(x, should_zero), x)
+            should_x = derivative(g, 3.0)
+            return add(mul(x, should_x), x)
 
-        np.testing.assert_allclose(derivative(f, 2.0), 1.0)
+        np.testing.assert_allclose(derivative(f, 5.0), 11.0)
+        np.testing.assert_allclose(derivative(f, 10.0), 21.0)
 
 
 if __name__ == "__main__":

@@ -83,7 +83,25 @@ class JVPTrace(Trace):
         return JVPTracer(self, val, 0.0)
 
     def lift(self, val):
-        return JVPTracer(self, val.primal, 0.0)
+        """
+        Lift a tracer from a lower (outer) trace into this one, as a constant.
+
+        `val` is a tracer from a lower trace. The invariant: a trace only ever
+        processes its own layer's tracers. Since a JVPTracer is a dual
+        (primal, tangent), a value lifted in from *outside* this JVPTrace is not
+        being differentiated by it — so it lifts as a constant: keep the primal,
+        zero the tangent ("outside parameters are non-tangent"). You may think of
+        why we can store a JVPTracer as a primal - I cannot tell more but my guess
+        is it subtlely matches to its representation in math:
+        ```primal + tangent * delta```, surely it can be put into a primal! Luckily,
+        we don't have to deal with it by ourselves as we use our own implemented
+        operators which already can handle these.
+
+        `pure`, `lift`, and `full_raise` all exist to uphold this invariant:
+        `pure` wraps a plain value, `lift` re-tags a lower tracer, `full_raise`
+        dispatches to whichever applies.
+        """
+        return JVPTracer(self, val, 0.0)
 
     def process_primitive(self, primitive, tracers, params):
         primals = [tracer.primal for tracer in tracers]
